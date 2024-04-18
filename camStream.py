@@ -1,9 +1,5 @@
 #!/usr/bin/python3
 
-# Mostly copied from https://picamera.readthedocs.io/en/release-1.13/recipes2.html
-# Run this script, then point a web browser at http:<this-ip-address>:8000
-# Note: needs simplejpeg to be installed (pip3 install simplejpeg).
-
 import io
 import logging
 import socketserver
@@ -17,7 +13,7 @@ from picamera2.outputs import FileOutput
 PAGE = """\
 <html>
 <head>
-<title>picamera2 MJPEG streaming demo</title>
+<title>picamera2 streaming</title>
 </head>
 <body>
 <img src="stream.mjpg" width="720" height="480" />
