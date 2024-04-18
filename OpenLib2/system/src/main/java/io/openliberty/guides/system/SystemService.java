@@ -74,10 +74,10 @@ public class SystemService {
 
     private static final int MOTOR_ENABLE_A_PIN = 17;
     private static final int MOTOR_ENABLE_B_PIN = 16;
-    private static final int MOTOR_INPUT_1_PIN = 23;
-    private static final int MOTOR_INPUT_2_PIN = 24;
-    private static final int MOTOR_INPUT_3_PIN = 20;
-    private static final int MOTOR_INPUT_4_PIN = 21;
+    private static final int MOTOR_INPUT_1_PIN = 27;
+    private static final int MOTOR_INPUT_2_PIN = 22;
+    private static final int MOTOR_INPUT_3_PIN = 23;
+    private static final int MOTOR_INPUT_4_PIN = 24;
 
 
     private DigitalOutput enableA;
@@ -87,7 +87,7 @@ public class SystemService {
     private static String roverConnMsg = "Rover Connected";
 
     private static double actualVoltage = 0.0;
-    private static int batteryPercent = 0;
+    private static int batteryPercent = 99;
     private static Set<Session> sessions = new HashSet<>();
 
 
@@ -113,13 +113,16 @@ public class SystemService {
                 .address(address)
                 .shutdown(DigitalState.LOW) // Ensure pin is LOW on shutdown for safety
                 .initial(DigitalState.LOW)
-                .provider("linuxfs-digital-output");
+                .provider("pigpio-digital-output");
     }
     // tag::sendToAllSessionseMethod[]
-    public static void sendToAllSessions(JsonObject systemLoad) {
+    public static void sendToOtherSessions(String currID, String msg) {
         for (Session session : sessions) {
+            if(currID.equals(session.getId())){
+                continue;
+            }
             try {
-                session.getBasicRemote().sendObject(systemLoad);
+                session.getBasicRemote().sendText(msg);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -151,6 +154,7 @@ public class SystemService {
         switch (message) {
             case "1":
                 isGameStarted=true;
+                sendToOtherSessions(session.getId(),"GS");
                 break;
             case "F":
                 moveForward();
@@ -166,6 +170,21 @@ public class SystemService {
                 break;
             case "S": // New case for stopping the motors
                 stopMotors();
+                break;
+            case "RED": // New case for stopping the motors
+                sendToOtherSessions(session.getId(),"RED");
+                break;
+            case "GRN": // New case for stopping the motors
+                sendToOtherSessions(session.getId(),"GRN");
+                break;
+            case "YW": // New case for stopping the motors
+                sendToOtherSessions(session.getId(),"YW");
+                break;
+            case "PUR": // New case for stopping the motors
+                sendToOtherSessions(session.getId(),"PUR");
+                break;
+            case "BLU": // New case for stopping the motors
+                sendToOtherSessions(session.getId(),"BLU");
                 break;
             default:
                 System.out.println("Unknown command: " + message);
@@ -245,8 +264,10 @@ public class SystemService {
     public void onClose(Session session, CloseReason closeReason) {
         logger.info("Session " + session.getId()
                     + " was closed with reason " + closeReason.getCloseCode());
-        sessions.remove(session);
         System.out.println("<GE>");
+        sendToOtherSessions(session.getId(),"GE");
+        sessions.remove(session);
+        
         stopMotors();
         isGameStarted = false;
     }
